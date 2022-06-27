@@ -47,7 +47,7 @@ def export_bom(data):
     out.append(';'.join(headers))
     row = ''
     for item in data:
-        out.append(';'.join([','.join(item[header]) if type(item[header]) == list else str(item[header]) for header in headers if header in item.keys()]))
+        out.append(';'.join([(','.join(item[header]) if type(item[header]) == list else str(item[header])) if header in item.keys() else '' for header in headers]))
         
     return '\n'.join(out)
 
@@ -55,10 +55,12 @@ import numpy as np
 from functools import reduce
 
 def merge_boms(datas):
-    lcsc_sns = np.unique([[item['LCSC'] for item in data if 'LCSC' in item.keys() and item['LCSC'] != ''] for data in datas])
+    all_keys = [[item['LCSC'] for item in data if 'LCSC' in item.keys() and item['LCSC'] != ''] for data in datas]
+    #lcsc_sns = np.unique(np.array(all_keys).flatten()[0])
+    lcsc_sns = reduce(lambda m,x: m + x, all_keys)
     
-    print([[[key for key in item.keys() if key != 'LCSC' and key != 'Count'] for item in data] for data in datas])
-    keys = np.unique(np.asanyarray([[[key for key in item.keys() if key != 'LCSC' and key != 'Count'] for item in data] for data in datas]).flatten())
+    all_keys = [[[key for key in item.keys() if key != 'LCSC' and key != 'Count'] for item in data] for data in datas]
+    keys = np.unique(np.array(all_keys[0]).flatten())
     data = []
     
     row = {}
@@ -67,12 +69,10 @@ def merge_boms(datas):
         dn = datas[i]
         for item in dn:
             for key in keys:
-                print(key)
-                print(item)
                 item[key + '_' + str(i)] = item.pop(key)
     for sn in lcsc_sns:
         d = [[item for item in data if item['LCSC'] == sn] for data in datas]
-        d = [x[0] for x in d]
+        d = [x[0] for x in d if len(x) > 0]
         for item in d:
             item.pop('LCSC')
         tot_count = reduce(lambda m,x: m + x, [item['Count'] for item in d])
@@ -87,8 +87,6 @@ def merge_boms(datas):
             
             
     return data
-
-
 
 if __name__ == "__main__":
     import sys
