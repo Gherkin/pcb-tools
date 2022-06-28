@@ -57,7 +57,7 @@ from functools import reduce
 def merge_boms(datas):
     all_keys = [[item['LCSC'] for item in data if 'LCSC' in item.keys() and item['LCSC'] != ''] for data in datas]
     #lcsc_sns = np.unique(np.array(all_keys).flatten()[0])
-    lcsc_sns = reduce(lambda m,x: m + x, all_keys)
+    lcsc_sns = np.unique(reduce(lambda m,x: m + x, all_keys))
     
     all_keys = [[[key for key in item.keys() if key != 'LCSC' and key != 'Count'] for item in data] for data in datas]
     keys = np.unique(np.array(all_keys[0]).flatten())
